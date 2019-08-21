@@ -9,19 +9,20 @@ import android.widget.Toast
 
 class MainActivity : AppCompatActivity() {
 
+    //findViewById is an expensive operation. Call it once and store it here
+    lateinit var showCountTextView : TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        showCountTextView = findViewById<TextView>(R.id.textView3)
     }
     fun toastMe(view: View) {
-        val myToast = Toast.makeText(this, "Hello Toast!", Toast.LENGTH_SHORT)
+        val myToast = Toast.makeText(this, "Hello!", Toast.LENGTH_SHORT)
         myToast.show()
     } // Note: Passing view required due to method being invoked by clicking a View
 
     fun incrementNum(view: View) {
-        // Get the text view
-        val showCountTextView = findViewById<TextView>(R.id.textView3)
-
         // Get the value of the text view
         val countString = showCountTextView.text.toString()
 
@@ -34,7 +35,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun decrementNum(view: View) {
-        val showCountTextView = findViewById<TextView>(R.id.textView3)
         val countString = showCountTextView.text.toString()
         var count: Int = Integer.parseInt(countString)
 
@@ -48,7 +48,6 @@ class MainActivity : AppCompatActivity() {
     fun randomMe(view: View) {
 
         // Get count from TextView
-        val showCountTextView = findViewById<TextView>(R.id.textView3)
         val countString = showCountTextView.text.toString()
         var count: Int = Integer.parseInt(countString)
 
@@ -64,7 +63,6 @@ class MainActivity : AppCompatActivity() {
 
     // Reset the count back to zero
     fun clearCount(view: View) {
-        val showCountTextView = findViewById<TextView>(R.id.textView3)
         showCountTextView.text = Integer.toString(0)
     }
 }
