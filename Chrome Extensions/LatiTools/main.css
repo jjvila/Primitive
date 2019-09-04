@@ -1,3 +1,26 @@
+
 body {
     min-width:800px;
 }
+
+.logo {
+    float: left;
+    width: 28px;
+    margin-right: 1%;
+}
+
+.column {
+    float: left;
+    width: 50%;
+  }
+
+  #result {
+      display: none;
+  }
+  
+  /* Clear floats after the columns */
+  .row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }

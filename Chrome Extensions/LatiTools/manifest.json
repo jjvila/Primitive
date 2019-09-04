@@ -1,13 +1,22 @@
 {
     "manifest_version": 2,
   
-    "name": "LatiTools Extension",
-    "description": "This extension produces a bounded box around inputted coordinates.",
+    "name": "LatiTools",
+    "description": "Generate bounded box coordinates around inputted GPS coordinates.",
     "version": "1.0",
     "content_security_policy": "script-src 'self' https://ajax.googleapis.com; object-src 'self'",
   
+    "icons": {
+        "16": "ic16.png",
+        "19": "ic19.png",
+        "20": "ic20.png",
+        "36": "ic36.png",
+        "48": "ic128.png", 
+        "128": "ic128.png"
+    },
+
     "browser_action": {
-     "default_icon": "ic_main.png",
+     "default_icon": "ic36.png",
      "default_popup": "popup.html"
     },
     "permissions": [
