@@ -1,37 +1,63 @@
-document.getElementById("mainForm").addEventListener("submit", getInput);
+//DEPRECATED: document.getElementById("mainForm").addEventListener("submit", getInput);
+
+document.addEventListener('DOMContentLoaded', function () {
+    let form = document.getElementById('mainForm');
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();           // prevent refresh
+        getInput();
+    })
+}, false);
 
 const maxLongitude = 180;
 const maxLatitude = 90;
 
 var pairsList;                // Array: List of coordinate pairs delimited by comma.
+var parsedPairsList = [];          // 2D Array: List of coordinate pairs as floats. i = [lat (float), lon (float)]
 var topmost = -91,            // float: largest latitude (max 90)
     bottommost = 181;         // float: smallest latitude (min -90)
 var topmostIndex = 0,
     bottommostIndex = 0;
-var northwest, southeast;
+var boxCoordinates = [4];     // NW and SE unpadded bounding box coordinates [latNW, lonNW, latSE, lonSE]
+var paddedCoordinates = [4]  // SIZE TEMP
 
-/* Retrieve User Input*/
+
 function getInput() {
-    var unparsedList = document.getElementById("inputCoordinates").value;
-    pairsList = unparsedList.split(";", 20);
-    getEdgeCoordinates();
+    /* Retrieve User Input from DOM */
+
+    // Get coordinates list
+    let unparsedList = document.getElementById("inputCoordinates").value;
+    if (unparsedList == "")
+        alertError(4);
+    else {
+        pairsList = unparsedList.split(";");
+
+        // Get padding
+        let meters = document.getElementById("paddingDistance").value;
+        if (isNaN(meters))
+            alertError(3);
+        else if (parseFloat(meters) < 0)
+            alertError(3);
+        else
+            generateBoundedBox(parseFloat(meters));
+    }
 }
 
-function getEdgeCoordinates() {
-    var lat = 0, lon = 0;
-    var negFlag = false, posFlag = false;
-    var latlonString = pairsList[0].split(",", 2);
-    var negMin = 1,                 // 1 = non-existant
+function generateBoundedBox(padding) {
+    let lat = 0, lon = 0;
+    let negFlag = false, posFlag = false;
+    let latlonString = pairsList[0].split(",", 2);
+    let negMin = 1,                 // 1 = non-existant
         negMax = -1 - maxLongitude,  // (-181) = non-existant
         posMin = maxLongitude + 1,    // (181) = non-existant
         posMax = -1;    // -1 = non-existant
 
-    var posMinIndex, posMaxIndex, negMinIndex, negMaxIndex;
+    let posMinIndex, posMaxIndex, negMinIndex, negMaxIndex;
 
-    for (var i = 0; i < pairsList.length; i++) {
+    for (let i = 0; i < pairsList.length; i++) {
         latlonString = pairsList[i].split(",", 2);
         lat = parseFloat(latlonString[0]);
         lon = parseFloat(latlonString[1]);
+        parsedPairsList[i] = [lat, lon];    // create float list here
 
 
         // Check range. -90 <= lat <= 90 ; -180 <= lon <= 180
@@ -66,6 +92,7 @@ function getEdgeCoordinates() {
                 negMax = lon;
                 negMaxIndex = i;
             }
+
         }
         if (lon > 0) {
             posFlag = true;
@@ -78,17 +105,18 @@ function getEdgeCoordinates() {
                 posMinIndex = i;
             }
         }
+        console.log("posMin: " + posMin + " posMax: " + posMax);
 
 
     }
-    alert("negMax: " + negMax + " negMin: " + negMin + " posMin: " + posMin + " posMax: " + posMax);
+    console.log("negMax: " + negMax + " negMin: " + negMin + " posMin: " + posMin + " posMax: " + posMax);
 
     // Determine largest longitudinal gap
     var lonGap1 = Math.abs(negMin - negMax);
     var lonGap2 = Math.abs(negMax - posMin);
     var lonGap3 = Math.abs(posMin - posMax);
     var lonGap4 = Math.abs(posMax - (2 * maxLongitude - Math.abs(negMin))); // anti-meridian offset applied to negMin
-    alert("gap1: " + lonGap1 + " gap2: " + lonGap2 + " gap3: " + lonGap3 + " gap4: " + lonGap4);
+    console.log("gap 1: " + lonGap1 + " gap 2: " + lonGap2 + " gap 3: " + lonGap3 + " gap 4: " + lonGap4);
     var lonGapLongest = lonGap1;
     var lonGapIndex = 1;
     if (lonGap2 > lonGapLongest) {
@@ -104,18 +132,28 @@ function getEdgeCoordinates() {
         lonGapIndex = 4;
     }
 
-    // Determine meridian crossings
+    // Determine meridian crossings, then determine box coordinates indices and store
+    let latlon;
+
     if ((negFlag && !posFlag) || posFlag && !negFlag) {
         // Meridian not crossed
         if (negFlag) {
             // negMin = WEST
             // negMax = EAST
-            alert("negMinWest: " + pairsList[negMinIndex] + " negMaxEast: " + pairsList[negMaxIndex]);
+            boxCoordinates[0] = parsedPairsList[topmostIndex][0];
+            boxCoordinates[1] = parsedPairsList[negMinIndex][1];
+            boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
+            boxCoordinates[3] = parsedPairsList[negMaxIndex][1];
+            console.log("negMin (West): (" + pairsList[negMinIndex] + "); negMax (East): (" + pairsList[negMaxIndex] + ")");
         }
         else if (posFlag) {
             // posMax = EAST
             // posMin = WEST
-            alert(" posMinWest: " + pairsList[posMinIndex] + " posMaxEast: " + pairsList[posMaxIndex]);
+            boxCoordinates[0] = parsedPairsList[topmostIndex][0];
+            boxCoordinates[1] = parsedPairsList[posMinIndex][1];
+            boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
+            boxCoordinates[3] = parsedPairsList[posMaxIndex][1];
+            console.log(" posMin (West): (" + pairsList[posMinIndex] + "); posMax (East): (" + pairsList[posMaxIndex] + ")");
         }
     }
     else {
@@ -125,51 +163,106 @@ function getEdgeCoordinates() {
             // Meridian crossed once
             // negMax = EAST
             // posMin = WEST
-            alert("posMinWest: " + pairsList[posMinIndex] + " negMaxEast: " + pairsList[negMaxIndex]);
+            boxCoordinates[0] = parsedPairsList[topmostIndex][0];
+            boxCoordinates[1] = parsedPairsList[posMinIndex][1];
+            boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
+            boxCoordinates[3] = parsedPairsList[negMaxIndex][1];
+            console.log("posMin (West): (" + pairsList[posMinIndex] + "); negMax (East): (" + pairsList[negMaxIndex] + ")");
 
         } else if (lonGapIndex == 4) {
             // Meridian crossed once
             // negMin = WEST
             // posMax = EAST
-            alert("negMinWest: " + pairsList[negMinIndex] + " posMaxEast: " + pairsList[posMaxIndex]);
+            boxCoordinates[0] = parsedPairsList[topmostIndex][0];       // nLat
+            boxCoordinates[1] = parsedPairsList[negMinIndex][1];        // wLon
+            boxCoordinates[2] = parsedPairsList[bottommostIndex][0];    // sLat
+            boxCoordinates[3] = parsedPairsList[posMaxIndex][1];        // eLon
 
+            paddedCoordinates = getPaddedCoordinates(boxCoordinates, padding);
+            console.log("negMin (West): (" + pairsList[negMinIndex] + "); posMax (East): (" + pairsList[posMaxIndex] + ")");
         }
         else if (lonGapIndex == 3) {
             // Meridian crossed twice
             // posMin = EAST
             // posMax = WEST
-            alert("posMaxWest: " + pairsList[posMaxIndex] + " posMinEast: " + pairsList[posMinIndex]);
+            boxCoordinates[0] = parsedPairsList[topmostIndex][0];
+            boxCoordinates[1] = parsedPairsList[posMaxIndex][1];
+            boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
+            boxCoordinates[3] = parsedPairsList[posMinIndex][1];
+            console.log("posMax (West): (" + pairsList[posMaxIndex] + "); posMin (East): (" + pairsList[posMinIndex] + ")");
         } else {
             // Meridian crossed twice
             // longGapIndex = 1
             // negMin = EAST
             // negMax = WEST
-            alert("negMaxWest: " + pairsList[negMaxIndex] + " negMinEast: " + pairsList[negMinIndex]);
+            boxCoordinates[0] = parsedPairsList[topmostIndex][0];
+            boxCoordinates[1] = parsedPairsList[negMaxIndex][1];
+            boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
+            boxCoordinates[3] = parsedPairsList[negMinIndex][1];
+            console.log("negMax (West): (" + pairsList[negMaxIndex] + "); negMin (East): (" + pairsList[negMinIndex] + ")");
         }
 
     }
 
-    printResult();
+
+    printResult(1);
 }
 
-function printResult() {
-    document.getElementById("result").style.display = "block";
-    document.getElementById("GPS-N").value = pairsList[topmostIndex];
-    nextAction();
-    //alert(" Topmost: " + pairsList[topmostIndex] + " | Bottommost: " + pairsList[bottommostIndex]);
-    document.getElementById("mainForm").addEventListener("submit", getInput);
+function printResult(type) {
+    // 1: Bounding Box
+    if (type == 1) {
+        document.getElementById("result").style.display = "block";
+        document.getElementById("NW").innerHTML = "(" + boxCoordinates[0] + ", " + boxCoordinates[1] + ")";
+        document.getElementById("SE").innerHTML = "(" + boxCoordinates[2] + ", " + boxCoordinates[3] + ")";
+        //alert(" Topmost: " + pairsList[topmostIndex] + " | Bottommost: " + pairsList[bottommostIndex]);
+    }
+    console.log("NW: " + paddedCoordinates[0][0] + ", " + paddedCoordinates[0][1]);
+    console.log("SE: " + paddedCoordinates[1][0] + ", " + paddedCoordinates[1][1]);
 
 }
 
-function nextAction() {
-    console.log("Done")
+function getPaddedCoordinates(latlon, lengthMeters) {
+    /*  INPUT
+        latlon[0]: lat of northernmost
+        latlon[1]: lon of westernmost
+        latlon[2]: lat of southernmost
+        larlon[3]: lon of easternmost
+
+        lengthMeters: desired padding in meters
+
+        OUTPUT
+        result[0][0]: lat of NW
+        result[0][1]: lon of NW
+        result[1][0]: lat of NE
+        result[1][1]: lon of NE
+        result[2][0]: lat of SE
+        result[2][1]: lon of SE
+        result[3][0]: lat of SW
+        result[3][1]: lon of SW
+    */
+
+    let result = [2];
+
+    /* Local Plane Formula (Law of Cosines) - Small Distances */
+
+    // Get NW
+    result[0] = [(lengthMeters / 111111) + latlon[0], -(lengthMeters / 1 / 111111) + latlon[1]];
+
+    // Get SE
+    result[1] = [-(lengthMeters / 111111) + latlon[2], (lengthMeters / 1 / 111111) + latlon[3]];
+
+
+    return result;
+
 }
 
 function alertError(errCode) {
-    if (errCode == undefined)
-        errCode = -1;
     if (errCode == 1)
         alert("Latitude out of range: -90 <= latitude <= 90");
     if (errCode == 2)
         alert("Longitude out of range: -180 <= longitude <= 180");
+    if (errCode == 3)
+        alert("Padding value must be a positive number.");
+    if (errCode == 4)
+        alert("Please enter a list of coordinates.");
 }

@@ -2,12 +2,15 @@
 <html>
 
 <head>
-  <img src="/ic128.png" class="logo">
   <title>LatiTools</title>
   <link rel="stylesheet" href="main.css">
 </head>
 
 <body>
+  <!-- Menu -->
+
+
+  <img src="/ic128.png" class="logo">
   <h1>LatiTools</h1>
   <div class="row">
     <div class="column">
@@ -15,17 +18,18 @@
       <form id="mainForm">
         <textarea name="inputCoordinates" id="inputCoordinates" rows="10" cols="30"
           placeholder="latitude, longitude ; latitude, longitude ; ..."></textarea><br>
-        <input type="radio" name="requestType" value="bounded" checked> Bounded Box<br>
-        <input type="radio" name="requestType" value="convert"> Convert<br><br>
-        <input type="text" name="paddingDistance" id="paddingDistance" placeholder="1">
-        <p>meters</p><br><br>
+        <p>Padding:</p>
+        <input type="text" name="paddingDistance" id="paddingDistance" placeholder="1"> meters
+        <br><br>
         <input type="submit" id="submit" value="Submit">
       </form>
     </div>
     <div class="column" id="result">
       <h2>Result</h2>
-      <h3>North Coordinate</h3>
-      <p id="GPS-N"></p>
+      <p>Northwest:</p>
+      <p id="NW"></p>
+      <p>Southeast:</p>
+      <p id="SE"></p>
     </div>
   </div>
   <script src="popup.js"></script>
