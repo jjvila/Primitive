@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- CHROME only: &#10; -->
 <html>
 
 <head>
@@ -7,29 +8,41 @@
 </head>
 
 <body>
+  <!-- Title -->
   <!-- Menu -->
+  <ul>
+    <li><div class="logo-container"><img src="/ic128.png" class="logo"><h1>LatiTools</h1></div></li>
+    <li><a class="active" href="#home">Bounding Box</a></li>
+    <li><a href="#news">Convert</a></li>
+    <li><a href="#contact">Other</a></li>
+    <li style="float:right"><a href="#about">About</a></li>
+  </ul>
 
-
-  <img src="/ic128.png" class="logo">
-  <h1>LatiTools</h1>
-  <div class="row">
-    <div class="column">
-      <h2>Enter GPS Coordinates</h2>
-      <form id="mainForm">
-        <textarea name="inputCoordinates" id="inputCoordinates" rows="10" cols="30"
-          placeholder="latitude, longitude ; latitude, longitude ; ..."></textarea><br>
-        <p>Padding:</p>
-        <input type="text" name="paddingDistance" id="paddingDistance" placeholder="1"> meters
-        <br><br>
-        <input type="submit" id="submit" value="Submit">
-      </form>
-    </div>
-    <div class="column" id="result">
-      <h2>Result</h2>
-      <p>Northwest:</p>
-      <p id="NW"></p>
-      <p>Southeast:</p>
-      <p id="SE"></p>
+  <!-- Inner Body -->
+  <div class="tab-body">
+    <div class="row">
+      <div class="column">
+        <h2>Enter GPS Coordinates</h2>
+        <form id="mainForm">
+          <textarea name="inputCoordinates" id="inputCoordinates" rows="10" cols="40"
+            placeholder="latitude, longitude&#10;latitude, longitude&#10;latitude longitude&#10;latitude longitude"></textarea><br>
+          <b>Input Order:</b>
+          <div>
+            <input type="radio" name="pairorder" id="pairswap2" value="true" checked> latitude, longitude<br>
+            <input type="radio" name="pairorder" id="pairswap1" value="false"> longitude, latitude<br>
+          </div>
+          <br><b>Padding:</b> <input type="text" name="paddingDistance" id="paddingDistance" placeholder="0"> meters
+          <br><br>
+          <input type="submit" id="submit" value="Submit">
+        </form>
+      </div>
+      <div class="column" id="result">
+        <h2>Result</h2>
+        <p>Northwest:</p>
+        <p id="NW"></p>
+        <p>Southeast:</p>
+        <p id="SE"></p>
+      </div>
     </div>
   </div>
   <script src="popup.js"></script>

@@ -1,35 +1,30 @@
-//DEPRECATED: document.getElementById("mainForm").addEventListener("submit", getInput);
+const maxLongitude = 180;
+const maxLatitude = 90;
+const delimiterRE = /[ ,	 ]+/;        // Delimiters accepted for coordinate parsing: space, comma, tab, small tab
 
 document.addEventListener('DOMContentLoaded', function () {
     let form = document.getElementById('mainForm');
+    let pairswap1 = document.getElementById('pairswap1');
+    let pairswap2 = document.getElementById('pairswap2');
+    pairswap1.addEventListener('change', function (e) {e.preventDefault; document.getElementById("inputCoordinates").placeholder = "longitude, latitude\nlongitude, latitude\nlongitude latitude\nlongitude latitude"; });
+    pairswap2.addEventListener('change', function (e) {e.preventDefault; document.getElementById("inputCoordinates").placeholder = "latitude, longitude\nlatitude, longitude\nlatitude longitude\nlatitude longitude"; });
     form.addEventListener('submit', function (e) {
         e.preventDefault();           // prevent refresh
-        getInput();
+        getInput(pairswap2.checked);
     })
 }, false);
 
-const maxLongitude = 180;
-const maxLatitude = 90;
-
-var pairsList;                // Array: List of coordinate pairs delimited by comma.
-var parsedPairsList = [];          // 2D Array: List of coordinate pairs as floats. i = [lat (float), lon (float)]
-var topmost = -91,            // float: largest latitude (max 90)
-    bottommost = 181;         // float: smallest latitude (min -90)
-var topmostIndex = 0,
-    bottommostIndex = 0;
-var boxCoordinates = [4];     // NW and SE unpadded bounding box coordinates [latNW, lonNW, latSE, lonSE]
-var paddedCoordinates = [4]  // SIZE TEMP
-
-
-function getInput() {
+function getInput(pairswap2) {
     /* Retrieve User Input from DOM */
+    let pairsList = [];              // Array: List of string coordinate pairs delimited by comma and/or space.
+
 
     // Get coordinates list
     let unparsedList = document.getElementById("inputCoordinates").value;
     if (unparsedList == "")
         alertError(4);
     else {
-        pairsList = unparsedList.split(";");
+        pairsList = unparsedList.split("\n");
 
         // Get padding
         let meters = document.getElementById("paddingDistance").value;
@@ -38,11 +33,17 @@ function getInput() {
         else if (parseFloat(meters) < 0)
             alertError(3);
         else
-            generateBoundedBox(parseFloat(meters));
+            generateBoundedBox(pairsList, parseFloat(meters), pairswap2);
     }
 }
 
-function generateBoundedBox(padding) {
+function generateBoundedBox(pairsList, padding, latLonOrder) {
+    /* INPUT 
+        padding: meters between outer coordinates and bounding box
+        latLonOrder: if false, inputted coordinates are swapped (lon, lat) instead of (lat, lon)
+                When not default, placement into parsed array is swapped to default format, then swapped back at printing.
+    */
+
     let lat = 0, lon = 0;
     let negFlag = false, posFlag = false;
     let latlonString = pairsList[0].split(",", 2);
@@ -52,11 +53,25 @@ function generateBoundedBox(padding) {
         posMax = -1;    // -1 = non-existant
 
     let posMinIndex, posMaxIndex, negMinIndex, negMaxIndex;
+    let parsedPairsList = [];          // 2D Array: List of coordinate pairs as floats. i = [lat (float), lon (float)]
+    let topmost = -91,            // float: largest latitude (max 90)
+        bottommost = 181;         // float: smallest latitude (min -90)
+    let topmostIndex = 0,
+        bottommostIndex = 0;
 
     for (let i = 0; i < pairsList.length; i++) {
-        latlonString = pairsList[i].split(",", 2);
+        latlonString = pairsList[i].split(delimiterRE, 2);
+
+        if (latLonOrder == true) {
         lat = parseFloat(latlonString[0]);
         lon = parseFloat(latlonString[1]);
+        } 
+        else { // Not Default
+            lon = parseFloat(latlonString[0]);
+            lat = parseFloat(latlonString[1]);  
+        }
+
+
         parsedPairsList[i] = [lat, lon];    // create float list here
 
 
@@ -133,7 +148,9 @@ function generateBoundedBox(padding) {
     }
 
     // Determine meridian crossings, then determine box coordinates indices and store
-    let latlon;
+    let boxCoordinates = [4];     // NW and SE unpadded bounding box coordinates [latNW, lonNW, latSE, lonSE]
+    let paddedCoordinates = [4]  // SIZE TEMP
+
 
     if ((negFlag && !posFlag) || posFlag && !negFlag) {
         // Meridian not crossed
@@ -144,6 +161,8 @@ function generateBoundedBox(padding) {
             boxCoordinates[1] = parsedPairsList[negMinIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
             boxCoordinates[3] = parsedPairsList[negMaxIndex][1];
+
+            paddedCoordinates = getPaddedCoordinates(boxCoordinates, padding);
             console.log("negMin (West): (" + pairsList[negMinIndex] + "); negMax (East): (" + pairsList[negMaxIndex] + ")");
         }
         else if (posFlag) {
@@ -153,6 +172,8 @@ function generateBoundedBox(padding) {
             boxCoordinates[1] = parsedPairsList[posMinIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
             boxCoordinates[3] = parsedPairsList[posMaxIndex][1];
+
+            paddedCoordinates = getPaddedCoordinates(boxCoordinates, padding);
             console.log(" posMin (West): (" + pairsList[posMinIndex] + "); posMax (East): (" + pairsList[posMaxIndex] + ")");
         }
     }
@@ -167,6 +188,8 @@ function generateBoundedBox(padding) {
             boxCoordinates[1] = parsedPairsList[posMinIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
             boxCoordinates[3] = parsedPairsList[negMaxIndex][1];
+
+            paddedCoordinates = getPaddedCoordinates(boxCoordinates, padding);
             console.log("posMin (West): (" + pairsList[posMinIndex] + "); negMax (East): (" + pairsList[negMaxIndex] + ")");
 
         } else if (lonGapIndex == 4) {
@@ -189,6 +212,8 @@ function generateBoundedBox(padding) {
             boxCoordinates[1] = parsedPairsList[posMaxIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
             boxCoordinates[3] = parsedPairsList[posMinIndex][1];
+
+            paddedCoordinates = getPaddedCoordinates(boxCoordinates, padding);
             console.log("posMax (West): (" + pairsList[posMaxIndex] + "); posMin (East): (" + pairsList[posMinIndex] + ")");
         } else {
             // Meridian crossed twice
@@ -199,22 +224,30 @@ function generateBoundedBox(padding) {
             boxCoordinates[1] = parsedPairsList[negMaxIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
             boxCoordinates[3] = parsedPairsList[negMinIndex][1];
+
+            paddedCoordinates = getPaddedCoordinates(boxCoordinates, padding);
             console.log("negMax (West): (" + pairsList[negMaxIndex] + "); negMin (East): (" + pairsList[negMinIndex] + ")");
         }
 
     }
 
 
-    printResult(1);
+    printResult(1, latLonOrder, boxCoordinates, paddedCoordinates);
 }
 
-function printResult(type) {
+function printResult(type, latLonOrder, boxCoordinates, paddedCoordinates) {
     // 1: Bounding Box
     if (type == 1) {
         document.getElementById("result").style.display = "block";
-        document.getElementById("NW").innerHTML = "(" + boxCoordinates[0] + ", " + boxCoordinates[1] + ")";
-        document.getElementById("SE").innerHTML = "(" + boxCoordinates[2] + ", " + boxCoordinates[3] + ")";
-        //alert(" Topmost: " + pairsList[topmostIndex] + " | Bottommost: " + pairsList[bottommostIndex]);
+        if (latLonOrder == true) {
+            document.getElementById("NW").innerHTML = boxCoordinates[0] + ", " + boxCoordinates[1];
+            document.getElementById("SE").innerHTML = boxCoordinates[2] + ", " + boxCoordinates[3];
+            //alert(" Topmost: " + pairsList[topmostIndex] + " | Bottommost: " + pairsList[bottommostIndex]);
+        }
+        else {
+            document.getElementById("NW").innerHTML = boxCoordinates[1] + ", " + boxCoordinates[0];
+            document.getElementById("SE").innerHTML = boxCoordinates[3] + ", " + boxCoordinates[2];
+        }
     }
     console.log("NW: " + paddedCoordinates[0][0] + ", " + paddedCoordinates[0][1]);
     console.log("SE: " + paddedCoordinates[1][0] + ", " + paddedCoordinates[1][1]);
