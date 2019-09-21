@@ -26,7 +26,8 @@ ul {
   
   li a:hover:not(.active) {
     border-bottom: solid 1px; 
-    border-bottom-color: #cfc2b9;
+    border-bottom-color: #d9e6f9;
+    cursor: pointer;
   }
   
   .active {
@@ -78,3 +79,45 @@ body {
     display: table;
     clear: both;
   }
+
+  /* Bounding Box Display */
+  table#bbox-display td {
+    position: relative;
+  }
+  table#bbox-display tr {
+    height: 40px;
+  }
+  table#bbox-display div {
+    position: absolute;
+  }
+#bbox-nw {
+    right:0; bottom: 0;
+}
+#bbox-ne {
+    left:0; bottom: 0; 
+}
+#bbox-sw {
+    right:0; top:0;
+}
+#bbox-se {
+    left:0; top:0;
+}
+#bbox {
+    border: 1px solid black; 
+    width: 70px
+}
+
+/* Description Tables */
+.scroll {
+    height: 300px;
+    overflow-y: scroll;
+}
+th {
+	text-align:left;
+    background: #d9e6f9;
+    padding:3px;
+}
+.output-table {
+	width: 100%;
+    font-size: .8em;
+}

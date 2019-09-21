@@ -11,11 +11,15 @@
   <!-- Title -->
   <!-- Menu -->
   <ul>
-    <li><div class="logo-container"><img src="/ic128.png" class="logo"><h1>LatiTools</h1></div></li>
-    <li><a class="active" href="#home">Bounding Box</a></li>
-    <li><a href="#news">Convert</a></li>
-    <li><a href="#contact">Other</a></li>
-    <li style="float:right"><a href="#about">About</a></li>
+    <li>
+      <div class="logo-container"><img src="/ic128.png" class="logo">
+        <h1>LatiTools</h1>
+      </div>
+    </li>
+    <li><a id="tab-bbox" class="active">Bounding Box</a></li>
+    <li><a id="tab-convert">Convert</a></li>
+    <li><a>Other</a></li>
+    <li style="float:right"><a id="tab-about">About</a></li>
   </ul>
 
   <!-- Inner Body -->
@@ -23,25 +27,146 @@
     <div class="row">
       <div class="column">
         <h2>Enter GPS Coordinates</h2>
-        <form id="mainForm">
-          <textarea name="inputCoordinates" id="inputCoordinates" rows="10" cols="40"
+        <form id="bbox-form">
+          <textarea id="bbox-form-pairslist" rows="10" cols="40" style="resize: vertical;"
             placeholder="latitude, longitude&#10;latitude, longitude&#10;latitude longitude&#10;latitude longitude"></textarea><br>
           <b>Input Order:</b>
           <div>
-            <input type="radio" name="pairorder" id="pairswap2" value="true" checked> latitude, longitude<br>
-            <input type="radio" name="pairorder" id="pairswap1" value="false"> longitude, latitude<br>
+            <input name="pair-order" type="radio" id="bbox-form-latlon" value="true" checked> <span>latitude,
+              longitude</span><br>
+            <input name="pair-order" type="radio" id="bbox-form-lonlat" value="false"> <span>longitude, latitude</span><br>
           </div>
-          <br><b>Padding:</b> <input type="text" name="paddingDistance" id="paddingDistance" placeholder="0"> meters
+          <br><b>Padding:</b> <input type="text" name="paddingDistance" id="paddingDistance" placeholder="0" size="10"
+            style="height: 20px; vertical-align:top; box-sizing: border-box">
+          <select id="padding-unit" style="height: 20px; font-size: 12px;">
+            <option value="meter">meters</option>
+            <option value="kilometer">kilometers</option>
+          </select>
           <br><br>
           <input type="submit" id="submit" value="Submit">
         </form>
       </div>
       <div class="column" id="result">
         <h2>Result</h2>
-        <p>Northwest:</p>
-        <p id="NW"></p>
-        <p>Southeast:</p>
-        <p id="SE"></p>
+        <div class="scroll">
+        <table id="bbox-display" style="width:100%">
+          <tr>
+            <td>
+              <div id="bbox-nw">?</div>
+            </td>
+            <td></td>
+            <td>
+              <div id="bbox-ne">?</div>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td id="bbox"></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>
+              <div id="bbox-sw">?</div>
+            </td>
+            <td></td>
+            <td>
+              <div id="bbox-se">?</div>
+            </td>
+          </tr>
+        </table><br>
+
+
+        <!-- Description Tables -->
+        <table class="output-table">
+            <tr>
+              <th>Padded Box</th>
+              <th id="bbox-p-th-l1">Latitude</th>
+              <th id="bbox-p-th-l2">Longitude</th>
+            </tr>
+            <tr>
+              <td><i>	Northwest:</i></td>
+              <td id="bbox-p-nw-l1">0.000000 </td>
+              <td id="bbox-p-nw-l2"> 0.000000 </td>
+            </tr>
+            <tr>
+              <td><i>	Southeast:</i></td>
+              <td id="bbox-p-se-l1">0.000000 </td>
+              <td id="bbox-p-se-l2"> 0.000000 </td>
+            </tr>
+            <tr>
+              <td><i>	Northeast:</i></td>
+              <td id="bbox-p-ne-l1">0.000000 </td>
+              <td id="bbox-p-ne-l2"> 0.000000 </td>
+            </tr>
+              <tr>
+              <td><i>	Southwest:</i></td>
+              <td id="bbox-p-sw-l1">0.000000 </td>
+              <td id="bbox-p-sw-l2"> 0.000000 </td>
+            </tr>
+            <th>Unpadded Box</th>
+            <th id="bbox-th-l1">Latitude</th>
+            <th id="bbox-th-l2">Longitude</th>
+            <tr>
+              <td><i>	Northwest:</i></td>
+              <td id="bbox-nw-l1">0.000000 </td>
+              <td id="bbox-nw-l2"> 0.000000 </td>
+            </tr>
+            <tr>
+              <td><i>	Southeast:</i></td>
+              <td id="bbox-se-l1">0.000000 </td>
+              <td id="bbox-se-l2"> 0.000000 </td>
+            </tr>
+            <tr>
+              <td><i>	Northeast:</i></td>
+              <td id="bbox-ne-l1">0.000000 </td>
+              <td id="bbox-ne-l2"> 0.000000 </td>
+            </tr>
+              <tr>
+              <td><i>	Southwest:</i></td>
+              <td id="bbox-sw-l1">0.000000 </td>
+              <td id="bbox-sw-l2"> 0.000000 </td>
+            </tr>
+            
+            <th>Statistics</th>
+            <th id="bbox-st-l1">Latitude</th>
+            <th id="bbox-st-l2">Longitude</th>
+            <tr>
+              <td><i>	Northern-most:</i></td>
+              <td id="bbox-n-l1">0.000000 </td>
+              <td id="bbox-n-l2">0.000000 </td>
+            </tr>
+            <tr>
+              <td><i>	Southern-most:</i></td>
+              <td id="bbox-s-l1">0.000000 </td>
+              <td id="bbox-s-l2">0.000000 </td>
+            </tr>
+            <tr>
+              <td><i>	Western-most:</i></td>
+              <td id="bbox-w-l1">0.000000 </td>
+              <td id="bbox-w-l2">0.000000 </td>
+            </tr>
+              <tr>
+              <td><i>	Eastern-most:</i></td>
+              <td id="bbox-e-l1">0.000000 </td>
+              <td id="bbox-e-l2">0.000000 </td>
+            </tr>
+             <th colspan="3">Information</th>
+              <tr>
+              <td><i>Padding:</i></td>
+              <td id="bbox-p" colspan="2">2 meters (.002 kilometeters)</td>
+            </tr>
+            <tr>
+              <td><i>Hemispheres:</i></td>
+              <td>Western, Eastern</td>
+            </tr>
+            <tr>
+              <td><i>	Meridians Crossed:</i></td>
+              <td>Anti-Meridian</td>
+            </tr>
+           
+          </table>
+          </div>
+
       </div>
     </div>
   </div>
