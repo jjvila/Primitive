@@ -59,11 +59,12 @@ function parseList(pairsList, padding, latLonOrder, paddingkm) {
     */
 
     let lat = 0, lon = 0;
-    let hemisphereSigns = [4];      // 0: latNegFlag = true/false = Southern
-                                    // 1: latPosFlag = true/false = Northern
-                                    // 2: lonNegFlag = true/false = Western 
-                                    // 3: lonPosFlag = true/false = Eastern
-
+    let hemisphereSigns = [
+                            false,      // 0: latNegFlag = true/false = Southern
+                            false,      // 1: latPosFlag = true/false = Northern
+                            false,      // 2: lonNegFlag = true/false = Western
+                            false       // 3: lonPosFlag = true/false = Eastern
+                        ];   
     let latlonString = pairsList[0].split(",", 2);
     let negMin = 1,                 // 1 = non-existant
         negMax = -1 - maxLongitude,  // (-181) = non-existant
@@ -133,10 +134,7 @@ function parseList(pairsList, padding, latLonOrder, paddingkm) {
                     negMax = lon;
                     negMaxIndex = i;
                 }
-
             }
-            else
-                hemisphereSigns[2] = false;
             if (lon > 0) {
                 hemisphereSigns[3] = true;
                 if (lon >= posMax) {
@@ -148,8 +146,6 @@ function parseList(pairsList, padding, latLonOrder, paddingkm) {
                     posMinIndex = i;
                 }
             }
-            else
-                hemisphereSigns[3] = false;
             console.log("posMin: " + posMin + " posMax: " + posMax);
         }
 
