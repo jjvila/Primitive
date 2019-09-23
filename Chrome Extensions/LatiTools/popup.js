@@ -151,6 +151,11 @@ function parseList(pairsList, padding, latLonOrder, paddingkm) {
 
 
     }
+    if (topmost < 0 || bottommost < 0)
+        hemisphereSigns[0] = true;
+    if (topmost >= 0 || bottommost >= 0)
+        hemisphereSigns[1] = true;
+
     console.log("negMax: " + negMax + " negMin: " + negMin + " posMin: " + posMin + " posMax: " + posMax);
 
     if (!errorOccured)
@@ -288,10 +293,10 @@ function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, pos
     }
 
 
-    printResult(1, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding, paddingkm);
+    printResult(1, hemisphereSigns, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding, paddingkm);
 }
 
-function printResult(type, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding, paddingkm) {
+function printResult(type, hemisphereSigns, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding, paddingkm) {
     // 1: Bounding Box
     if (type == 1) {
         document.getElementById("result").style.display = "block";
@@ -379,7 +384,7 @@ function printResult(type, latLonOrder, boxCoordinates, paddedCoordinates, stati
             document.getElementById("bbox-e-l2").innerHTML = statisticsCoordinates[3][0].toFixed(6);
         }
 
-        // Print Information
+        // Print Information: Padding
         let paddingstring;
         if (padding == 1)
             paddingstring = padding + " meter (" + paddingkm + " kilometers)";
@@ -389,6 +394,26 @@ function printResult(type, latLonOrder, boxCoordinates, paddedCoordinates, stati
             paddingstring = padding + " meters (" + paddingkm + " kilometers)"
 
         document.getElementById("bbox-p").innerHTML = paddingstring;
+
+        // Print Information: Hemispheres
+        let hemisphereString = "";
+        if (hemisphereSigns[0])
+                hemisphereString = "Southern";
+        if (hemisphereSigns[1]) {
+            if (hemisphereString != "") hemisphereString+= ", ";
+            hemisphereString += "Northern";
+        }
+        if (hemisphereSigns[2]) {
+            if (hemisphereString != "") hemisphereString+= ", ";
+            hemisphereString += "Western";
+        }
+        if (hemisphereSigns[3]) {
+            if (hemisphereString != "") hemisphereString+= ", ";
+            hemisphereString += "Eastern";
+        }
+    
+        document.getElementById("bbox-hs").innerHTML = hemisphereString;
+
     }
     console.log("NW: " + paddedCoordinates[0][0] + ", " + paddedCoordinates[0][1]);
     console.log("SE: " + paddedCoordinates[1][0] + ", " + paddedCoordinates[1][1]);

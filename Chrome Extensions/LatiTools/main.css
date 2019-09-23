@@ -103,9 +103,18 @@ body {
     left:0; top:0;
 }
 #bbox {
-    border: 1px solid black; 
-    width: 70px
+    position: relative;
+    border: 2px solid #2c5aa0; 
+    width: 60px
 }
+
+.dot {
+    height: 7px;
+    width: 7px;
+    background-color: #d45500;
+    border-radius: 50%;
+    position: absolute;
+  }
 
 /* Description Tables */
 .scroll {
