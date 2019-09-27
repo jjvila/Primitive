@@ -29,7 +29,10 @@ function getInput(pairswap2) {
 
         // Get padding
         let padding = document.getElementById("paddingDistance").value;
-        let paddingFloat;
+        let paddingFloat;          // Meters to be used in the algorithm for m or km
+        let paddingValues = [2];    // [0]: padding in meters
+        // [1]: padding in kilometers
+        // [2]: padding in degrees
         if (padding == "")
             padding = 0;
         if (isNaN(padding))
@@ -40,18 +43,26 @@ function getInput(pairswap2) {
                 alertError(3);
             else {
                 let x = document.getElementById("padding-unit").selectedIndex;
-                let paddingkm = paddingFloat / 1000;
-                if (document.getElementsByTagName("option")[x].value == "kilometer") {
-                    paddingkm = paddingFloat;
-                    paddingFloat = paddingFloat * 1000; // convert to meters
+                if (document.getElementsByTagName("option")[x].value == "meter") {
+                    paddingValues[0] = paddingFloat;
+                    paddingValues[1] = paddingFloat / 1000;
                 }
-                parseList(pairsList, paddingFloat, pairswap2, paddingkm);
+                if (document.getElementsByTagName("option")[x].value == "kilometer") {
+                    paddingValues[0] = paddingFloat * 1000;
+                    paddingValues[1] = paddingFloat;
+                }
+                if (document.getElementsByTagName("option")[x].value == "degree") {
+                    paddingValues[2] = paddingFloat;
+                }
+                else
+                    paddingValues[2] = -1;                      // -1: Flag for non-degree unit
+                parseList(pairsList, paddingValues, pairswap2);
             }
         }
     }
 }
 
-function parseList(pairsList, padding, latLonOrder, paddingkm) {
+function parseList(pairsList, padding, latLonOrder) {
     /* INPUT 
         padding: meters between outer coordinates and bounding box
         latLonOrder: if false, inputted coordinates are swapped (lon, lat) instead of (lat, lon)
@@ -60,11 +71,11 @@ function parseList(pairsList, padding, latLonOrder, paddingkm) {
 
     let lat = 0, lon = 0;
     let hemisphereSigns = [
-                            false,      // 0: latNegFlag = true/false = Southern
-                            false,      // 1: latPosFlag = true/false = Northern
-                            false,      // 2: lonNegFlag = true/false = Western
-                            false       // 3: lonPosFlag = true/false = Eastern
-                        ];   
+        false,      // 0: latNegFlag = true/false = Southern
+        false,      // 1: latPosFlag = true/false = Northern
+        false,      // 2: lonNegFlag = true/false = Western
+        false       // 3: lonPosFlag = true/false = Eastern
+    ];
     let latlonString = pairsList[0].split(",", 2);
     let negMin = 1,                 // 1 = non-existant
         negMax = -1 - maxLongitude,  // (-181) = non-existant
@@ -159,20 +170,20 @@ function parseList(pairsList, padding, latLonOrder, paddingkm) {
     console.log("negMax: " + negMax + " negMin: " + negMin + " posMin: " + posMin + " posMax: " + posMax);
 
     if (!errorOccured)
-        generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, posMinIndex, posMaxIndex, negMinIndex, negMaxIndex, parsedPairsList, topmostIndex, bottommostIndex, pairsList, padding, paddingkm, latLonOrder);
+        generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, posMinIndex, posMaxIndex, negMinIndex, negMaxIndex, parsedPairsList, topmostIndex, bottommostIndex, pairsList, padding, latLonOrder);
 
 }
 
-function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, posMinIndex, posMaxIndex, negMinIndex, negMaxIndex, parsedPairsList, topmostIndex, bottommostIndex, pairsList, padding, paddingkm, latLonOrder) {
+function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, posMinIndex, posMaxIndex, negMinIndex, negMaxIndex, parsedPairsList, topmostIndex, bottommostIndex, pairsList, padding, latLonOrder) {
 
     // Determine largest longitudinal gap
-    var lonGap1 = Math.abs(negMin - negMax);
-    var lonGap2 = Math.abs(negMax - posMin);
-    var lonGap3 = Math.abs(posMin - posMax);
-    var lonGap4 = Math.abs(posMax - (2 * maxLongitude - Math.abs(negMin))); // anti-meridian offset applied to negMin
+    let lonGap1 = Math.abs(negMin - negMax);
+    let lonGap2 = Math.abs(negMax - posMin);
+    let lonGap3 = Math.abs(posMin - posMax);
+    let lonGap4 = Math.abs(posMax - (2 * maxLongitude - Math.abs(negMin))); // anti-meridian offset applied to negMin
     console.log("gap 1: " + lonGap1 + " gap 2: " + lonGap2 + " gap 3: " + lonGap3 + " gap 4: " + lonGap4);
-    var lonGapLongest = lonGap1;
-    var lonGapIndex = 1;
+    let lonGapLongest = lonGap1;
+    let lonGapIndex = 1;
     if (lonGap2 > lonGapLongest) {
         lonGapLongest = lonGap2;
         lonGapIndex = 2;
@@ -212,8 +223,8 @@ function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, pos
             console.log("negMin (West): (" + pairsList[negMinIndex] + "); negMax (East): (" + pairsList[negMaxIndex] + ")");
         }
         else if (hemisphereSigns[3]) {
-            // posMax = EAST
             // posMin = WEST
+            // posMax = EAST
             boxCoordinates[0] = parsedPairsList[topmostIndex][0];
             boxCoordinates[1] = parsedPairsList[posMinIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
@@ -231,8 +242,8 @@ function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, pos
         // Determine if crossed once or twice
         if (lonGapIndex == 2) {
             // Meridian crossed once
-            // negMax = EAST
             // posMin = WEST
+            // negMax = EAST
             boxCoordinates[0] = parsedPairsList[topmostIndex][0];
             boxCoordinates[1] = parsedPairsList[posMinIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
@@ -261,8 +272,8 @@ function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, pos
         }
         else if (lonGapIndex == 3) {
             // Meridian crossed twice
-            // posMin = EAST
             // posMax = WEST
+            // posMin = EAST
             boxCoordinates[0] = parsedPairsList[topmostIndex][0];
             boxCoordinates[1] = parsedPairsList[posMaxIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
@@ -276,8 +287,8 @@ function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, pos
         } else {
             // Meridian crossed twice
             // longGapIndex = 1
-            // negMin = EAST
             // negMax = WEST
+            // negMin = EAST
             boxCoordinates[0] = parsedPairsList[topmostIndex][0];
             boxCoordinates[1] = parsedPairsList[negMaxIndex][1];
             boxCoordinates[2] = parsedPairsList[bottommostIndex][0];
@@ -291,12 +302,83 @@ function generateBoundedBox(hemisphereSigns, negMin, negMax, posMin, posMax, pos
         }
 
     }
+        // Check that coordinates stay within range
+        if (   paddedCoordinates[0][0] < -90 
+            || paddedCoordinates[0][0] > 90
+            || paddedCoordinates[1][0] < -90
+            || paddedCoordinates[1][0] > 90
+            || paddedCoordinates[2][0] < -90
+            || paddedCoordinates[2][0] > 90
+            || paddedCoordinates[3][0] < -90
+            || paddedCoordinates[3][0] > 90)
+            alertError(6);
+        else
+            printResult(1, hemisphereSigns, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding);
+            /*
+        if (paddedCoordinates[0][1] < -180) {
+            paddedCoordinates[0][1] = 180 - (Math.abs(paddedCoordinates[0][1]) - 180);
+            paddedCoordinates[3][1] = paddedCoordinates[0][1];
+            if (paddedCoordinates[1][1] <= paddedCoordinates[0][1]) {
+                alertError(7);
+            }
 
-
-    printResult(1, hemisphereSigns, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding, paddingkm);
+        }
+        */
 }
 
-function printResult(type, hemisphereSigns, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding, paddingkm) {
+function getPaddedCoordinates(latlon, padding) {
+    /*  INPUT
+        latlon[0]: lat of northernmost
+        latlon[1]: lon of westernmost
+        latlon[2]: lat of southernmost
+        larlon[3]: lon of easternmost
+
+        padding[0]: padding in meters
+        padding[1]: padding in kilometers
+        padding[2]: padding in degrees (-1 if not provided)
+
+        OUTPUT
+        result[0]: NW coordinates ([lat, lon])
+        result[1]: SE coordinates ([lat, lon])
+        result[2]: NE coordinates ([lat, lon])
+        result[3]: SW coordinates ([lat, lon])
+    */
+
+    let result = [4];
+
+    if (padding[2] != -1) {
+        // Get NW
+        result[0] = [latlon[0] + padding[2] , latlon[1] - padding[2] ];
+        // Get SE
+        result[1] = [latlon[0] - padding[2] , latlon[1] + padding[2] ];
+        // Get NE
+        result[2] = [latlon[0] + padding[2] , latlon[1] + padding[2] ];
+        // Get SW
+        result[3] = [latlon[0] - padding[2] , latlon[1] - padding[2] ];
+
+    }
+    else {
+
+        /* Local Plane Formula (Law of Cosines) - Small Distances */
+
+        // Get NW
+        result[0] = [(padding[0] / 111111) + latlon[0], padding[0] / (111111 * (Math.cos(latlon[0] * Math.PI / 180))) - latlon[1]];
+
+        // Get SE
+        result[1] = [-(padding[0] / 111111) + latlon[2], padding[0] / (111111 * (Math.cos(latlon[0] * Math.PI / 180))) + latlon[1]];
+
+        // Get NE
+        result[2] = [(padding[0] / 111111) + latlon[0], padding[0] / (111111 * (Math.cos(latlon[0] * Math.PI / 180))) + latlon[1]];
+
+        // Get SW
+        result[3] = [-(padding[0] / 111111) + latlon[2], padding[0] / (111111 * (Math.cos(latlon[0] * Math.PI / 180))) - latlon[1]];
+    }
+
+    return result;
+
+}
+
+function printResult(type, hemisphereSigns, latLonOrder, boxCoordinates, paddedCoordinates, statisticsCoordinates, padding) {
     // 1: Bounding Box
     if (type == 1) {
         document.getElementById("result").style.display = "block";
@@ -386,74 +468,37 @@ function printResult(type, hemisphereSigns, latLonOrder, boxCoordinates, paddedC
 
         // Print Information: Padding
         let paddingstring;
-        if (padding == 1)
-            paddingstring = padding + " meter (" + paddingkm + " kilometers)";
-        else if (paddingkm == 1)
-            paddingstring = padding + " meters (" + paddingkm + " kilometer)";
+        if (padding[0] == 1)
+            paddingstring = padding[0] + " meter (" + padding[1] + " kilometers)";
+        else if (padding[1] == 1)
+            paddingstring = padding[0] + " meters (" + padding[1] + " kilometer)";
         else
-            paddingstring = padding + " meters (" + paddingkm + " kilometers)"
+            paddingstring = padding[0] + " meters (" + padding[1] + " kilometers)"
 
         document.getElementById("bbox-p").innerHTML = paddingstring;
 
         // Print Information: Hemispheres
         let hemisphereString = "";
         if (hemisphereSigns[0])
-                hemisphereString = "Southern";
+            hemisphereString = "Southern";
         if (hemisphereSigns[1]) {
-            if (hemisphereString != "") hemisphereString+= ", ";
+            if (hemisphereString != "") hemisphereString += ", ";
             hemisphereString += "Northern";
         }
         if (hemisphereSigns[2]) {
-            if (hemisphereString != "") hemisphereString+= ", ";
+            if (hemisphereString != "") hemisphereString += ", ";
             hemisphereString += "Western";
         }
         if (hemisphereSigns[3]) {
-            if (hemisphereString != "") hemisphereString+= ", ";
+            if (hemisphereString != "") hemisphereString += ", ";
             hemisphereString += "Eastern";
         }
-    
+
         document.getElementById("bbox-hs").innerHTML = hemisphereString;
 
     }
     console.log("NW: " + paddedCoordinates[0][0] + ", " + paddedCoordinates[0][1]);
     console.log("SE: " + paddedCoordinates[1][0] + ", " + paddedCoordinates[1][1]);
-
-}
-
-function getPaddedCoordinates(latlon, padding) {
-    /*  INPUT
-        latlon[0]: lat of northernmost
-        latlon[1]: lon of westernmost
-        latlon[2]: lat of southernmost
-        larlon[3]: lon of easternmost
-
-        padding: desired padding in meters
-
-        OUTPUT
-        result[0]: NW coordinates ([lat, lon])
-        result[1]: SE coordinates ([lat, lon])
-        result[2]: NE coordinates ([lat, lon])
-        result[3]: SW coordinates ([lat, lon])
-    */
-
-    let result = [4];
-
-    /* Local Plane Formula (Law of Cosines) - Small Distances */
-
-    // Get NW
-    result[0] = [(padding / 111111) + latlon[0], -(padding / 1 / 111111) + latlon[1]];
-
-    // Get SE
-    result[1] = [-(padding / 111111) + latlon[2], (padding / 1 / 111111) + latlon[3]];
-
-    // Get NE
-    result[2] = [(padding / 111111) + latlon[0], (padding / 1 / 111111) + latlon[3]];
-
-    // Get SW
-    result[3] = [-(padding / 111111) + latlon[2], -(padding / 1 / 111111) + latlon[1]];
-
-
-    return result;
 
 }
 
@@ -477,6 +522,12 @@ function alertError(errCode) {
             break;
         case 5:
             alert("List of coordinates contains an invalid or unpaired value.");
+            break;
+        case 6:
+            alert("Resulting box exceeds latitudinal range. Please reduce padding.");
+            break;
+        case 7:
+            alert("Resulting box exceeds longitudinal range. Please reduce padding.");
             break;
     }
 }

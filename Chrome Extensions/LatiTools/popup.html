@@ -31,21 +31,50 @@
           <textarea id="bbox-form-pairslist" rows="10" cols="40" style="resize: vertical;"
             placeholder="latitude, longitude&#10;latitude, longitude&#10;latitude longitude&#10;latitude longitude"></textarea><br>
           <b>Input Order:</b>
+
+
+          
+      <div class="radio-container">
+          <ul>
+          <li>
+            <input type="radio" id="bbox-form-latlon" name="pair-order" checked>
+            <label for="bbox-form-latlon">Latitude, Longitude</label>
+            
+            <div class="check"></div>
+          </li>
+          
+          <li>
+            <input type="radio" id="bbox-form-lonlat" name="pair-order">
+            <label for="bbox-form-lonlat">Longitude, Latitude</label>
+            
+            <div class="check"><div class="inside"></div></div>
+          </li>
+        </ul>
+        </div>
+
+
+<!--
           <div>
             <input name="pair-order" type="radio" id="bbox-form-latlon" value="true" checked> <span>latitude,
               longitude</span><br>
             <input name="pair-order" type="radio" id="bbox-form-lonlat" value="false"> <span>longitude, latitude</span><br>
           </div>
+        -->
           <br><b>Padding:</b> <input type="text" name="paddingDistance" id="paddingDistance" placeholder="0" size="10"
             style="height: 20px; vertical-align:top; box-sizing: border-box">
           <select id="padding-unit" style="height: 20px; font-size: 12px;">
             <option value="meter">meters</option>
             <option value="kilometer">kilometers</option>
+            <option value="degree">degrees</option>
           </select>
           <br><br>
           <input type="submit" id="submit" value="Submit">
         </form>
-      </div>
+      </div> 
+
+
+
+      <!-- Result Column -->
       <div class="column" id="result">
         <h2>Result</h2>
         <div class="scroll">
